@@ -13,6 +13,7 @@ namespace WcfCompressMessageEncoder
         public const string WcfCompressEncodingName = "WcfCompressEncoding";
         public const string WcfCompressEncodingNamespace = "http://schemas.microsoft.com/ws/06/2004/mspolicy/netWcfCompress1";
         public const string WcfCompressEncodingPrefix = "WcfCompress";
+        public const string DefaultCompressionFormat = "GZip";
     }
 
     //This is the binding element that, when plugged into a custom binding, will enable the WcfCompress encoder
@@ -28,9 +29,10 @@ namespace WcfCompressMessageEncoder
         {
         }
 
-        public WcfCompressMessageEncodingBindingElement(MessageEncodingBindingElement messageEncoderBindingElement)
+        public WcfCompressMessageEncodingBindingElement(MessageEncodingBindingElement messageEncoderBindingElement, string compressionFormat = WcfCompressMessageEncodingPolicyConstants.DefaultCompressionFormat)
         {
             InnerMessageEncodingBindingElement = messageEncoderBindingElement;
+            CompressionFormat = compressionFormat;
         }
 
         public MessageEncodingBindingElement InnerMessageEncodingBindingElement { get; set; }
@@ -56,12 +58,12 @@ namespace WcfCompressMessageEncoder
         //message encoder
         public override MessageEncoderFactory CreateMessageEncoderFactory()
         {
-            return new WcfCompressMessageEncoderFactory(InnerMessageEncodingBindingElement.CreateMessageEncoderFactory());
+            return new WcfCompressMessageEncoderFactory(InnerMessageEncodingBindingElement.CreateMessageEncoderFactory(), CompressionFormat);
         }
 
         public override BindingElement Clone()
         {
-            return new WcfCompressMessageEncodingBindingElement(InnerMessageEncodingBindingElement);
+            return new WcfCompressMessageEncodingBindingElement(InnerMessageEncodingBindingElement, CompressionFormat);
         }
 
         public override T GetProperty<T>(BindingContext context)
@@ -97,6 +99,8 @@ namespace WcfCompressMessageEncoder
             context.BindingParameters.Add(this);
             return context.CanBuildInnerChannelListener<TChannel>();
         }
+
+        public string CompressionFormat { get; set; }
     }
 
     //This class is necessary to be able to plug in the WcfCompress encoder binding element through
@@ -117,7 +121,7 @@ namespace WcfCompressMessageEncoder
 
         //The only property we need to configure for our binding element is the type of
         //inner encoder to use. Here, we support text and binary.
-        [ConfigurationProperty("compressionFormat", DefaultValue = "GZip")]
+        [ConfigurationProperty("compressionFormat", DefaultValue = WcfCompressMessageEncodingPolicyConstants.DefaultCompressionFormat)]
         public string CompressionFormat
         {
             get => (string) base["compressionFormat"];
@@ -128,6 +132,7 @@ namespace WcfCompressMessageEncoder
         public override void ApplyConfiguration(BindingElement bindingElement)
         {
             var binding = (WcfCompressMessageEncodingBindingElement) bindingElement;
+            binding.CompressionFormat = CompressionFormat;
             var propertyInfo = ElementInformation.Properties;
             if (propertyInfo["innerMessageEncoding"].ValueOrigin != PropertyValueOrigin.Default)
                 switch (InnerMessageEncoding)

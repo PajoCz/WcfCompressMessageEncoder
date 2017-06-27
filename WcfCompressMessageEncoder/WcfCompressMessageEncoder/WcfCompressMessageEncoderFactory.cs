@@ -12,11 +12,11 @@ namespace WcfCompressMessageEncoder
 
         //The WcfCompress encoder wraps an inner encoder
         //We require a factory to be passed in that will create this inner encoder
-        public WcfCompressMessageEncoderFactory(MessageEncoderFactory messageEncoderFactory)
+        public WcfCompressMessageEncoderFactory(MessageEncoderFactory messageEncoderFactory, string compressionFormat)
         {
             if (messageEncoderFactory == null)
                 throw new ArgumentNullException("messageEncoderFactory", "A valid message encoder factory must be passed to the WcfCompressEncoder");
-            encoder = new WcfCompressMessageEncoder(messageEncoderFactory.Encoder);
+            encoder = new WcfCompressMessageEncoder(messageEncoderFactory.Encoder, compressionFormat);
         }
 
         //The service framework uses this property to obtain an encoder from this encoder factory
@@ -35,12 +35,15 @@ namespace WcfCompressMessageEncoder
             //This member stores this inner encoder.
             private readonly MessageEncoder innerEncoder;
 
+            private readonly string compressionFormat;
+
             //We require an inner encoder to be supplied (see comment above)
-            internal WcfCompressMessageEncoder(MessageEncoder messageEncoder)
+            internal WcfCompressMessageEncoder(MessageEncoder messageEncoder, string compressionFormat)
             {
                 if (messageEncoder == null)
                     throw new ArgumentNullException("messageEncoder", "A valid message encoder must be passed to the WcfCompressEncoder");
                 innerEncoder = messageEncoder;
+                this.compressionFormat = compressionFormat;
             }
 
             public override string ContentType => WcfCompressContentType;
@@ -50,12 +53,27 @@ namespace WcfCompressMessageEncoder
             //SOAP version to use - we delegate to the inner encoder for this
             public override MessageVersion MessageVersion => innerEncoder.MessageVersion;
 
+            private Stream GetCompressStream(Stream inputStream, CompressionMode compressionMode)
+            {
+                switch (compressionFormat)
+                {
+                    case "":
+                        return null;
+                    case "GZip":
+                        return new GZipStream(inputStream, compressionMode, true);
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(compressionFormat), compressionFormat, "Unknown compressionFormat value");
+                }
+            }
+
             //Helper method to compress an array of bytes
-            private static ArraySegment<byte> CompressBuffer(ArraySegment<byte> buffer, BufferManager bufferManager, int messageOffset)
+            private ArraySegment<byte> CompressBuffer(ArraySegment<byte> buffer, BufferManager bufferManager, int messageOffset)
             {
                 var memoryStream = new MemoryStream();
+                var compressStream = GetCompressStream(memoryStream, CompressionMode.Compress);
+                if (compressStream == null) return buffer;
 
-                using (var gzStream = new GZipStream(memoryStream, CompressionMode.Compress, true))
+                using (var gzStream = compressStream)
                 {
                     gzStream.Write(buffer.Array, buffer.Offset, buffer.Count);
                 }
@@ -75,14 +93,17 @@ namespace WcfCompressMessageEncoder
             }
 
             //Helper method to decompress an array of bytes
-            private static ArraySegment<byte> DecompressBuffer(ArraySegment<byte> buffer, BufferManager bufferManager)
+            private ArraySegment<byte> DecompressBuffer(ArraySegment<byte> buffer, BufferManager bufferManager)
             {
                 var memoryStream = new MemoryStream(buffer.Array, buffer.Offset, buffer.Count);
                 var decompressedStream = new MemoryStream();
+                var decompressStream = GetCompressStream(memoryStream, CompressionMode.Decompress);
+                if (decompressStream == null) return buffer;
+
                 var totalRead = 0;
                 var blockSize = 1024;
                 byte[] tempBuffer = bufferManager.TakeBuffer(blockSize);
-                using (var gzStream = new GZipStream(memoryStream, CompressionMode.Decompress))
+                using (var gzStream = decompressStream)
                 {
                     while (true)
                     {

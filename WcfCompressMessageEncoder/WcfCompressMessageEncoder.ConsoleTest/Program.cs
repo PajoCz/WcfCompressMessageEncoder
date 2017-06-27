@@ -24,6 +24,14 @@ namespace WcfCompressMessageEncoder.ConsoleTest
             binding = new CustomBinding(encoding, transport);
             CallWcf(binding, "http://pbalas:8002/WcfCompressMessageEncoder.Service/GZipBinary");
 
+            encoding = new WcfCompressMessageEncodingBindingElement(new TextMessageEncodingBindingElement(), String.Empty);
+            binding = new CustomBinding(encoding, transport);
+            CallWcf(binding, "http://pbalas:8002/WcfCompressMessageEncoder.Service/Text");
+
+            encoding = new WcfCompressMessageEncodingBindingElement(new BinaryMessageEncodingBindingElement(), String.Empty);
+            binding = new CustomBinding(encoding, transport);
+            CallWcf(binding, "http://pbalas:8002/WcfCompressMessageEncoder.Service/Binary");
+
             Console.WriteLine("PRESS ANY KEY TO EXIT ...");
             Console.ReadKey();
         }
