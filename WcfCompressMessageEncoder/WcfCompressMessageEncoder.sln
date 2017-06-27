@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26403.7
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WcfCompressMessageEncoder", "WcfCompressMessageEncoder\WcfCompressMessageEncoder.csproj", "{E256DDD1-0C72-4C44-83ED-E391893309F9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WcfCompressMessageEncoder.ConsoleTest", "WcfCompressMessageEncoder.ConsoleTest\WcfCompressMessageEncoder.ConsoleTest.csproj", "{3A5FA810-D3F9-4430-B904-4661C1605D42}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E256DDD1-0C72-4C44-83ED-E391893309F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E256DDD1-0C72-4C44-83ED-E391893309F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E256DDD1-0C72-4C44-83ED-E391893309F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E256DDD1-0C72-4C44-83ED-E391893309F9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3A5FA810-D3F9-4430-B904-4661C1605D42}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A5FA810-D3F9-4430-B904-4661C1605D42}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A5FA810-D3F9-4430-B904-4661C1605D42}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A5FA810-D3F9-4430-B904-4661C1605D42}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
