@@ -2,6 +2,7 @@
 using System.IO;
 using System.IO.Compression;
 using System.ServiceModel.Channels;
+using Brotli;
 
 namespace WcfCompressMessageEncoder
 {
@@ -55,14 +56,18 @@ namespace WcfCompressMessageEncoder
 
             private Stream GetCompressStream(Stream inputStream, CompressionMode compressionMode)
             {
-                switch (compressionFormat)
+                switch (compressionFormat.ToLower())
                 {
                     case "":
                         return null;
-                    case "GZip":
+                    case "gzip":
                         return new GZipStream(inputStream, compressionMode, true);
+                    case "deflate":
+                        return new DeflateStream(inputStream, compressionMode, true);
+                    case "brotli":
+                        return new BrotliStream(inputStream, compressionMode, true);
                     default:
-                        throw new ArgumentOutOfRangeException(nameof(compressionFormat), compressionFormat, "Unknown compressionFormat value");
+                        throw new ArgumentOutOfRangeException(nameof(compressionFormat), $"Unknown compressionFormat value '{compressionFormat}'");
                 }
             }
 
