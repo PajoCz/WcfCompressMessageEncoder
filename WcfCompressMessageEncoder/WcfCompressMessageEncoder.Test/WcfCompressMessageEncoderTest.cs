@@ -13,6 +13,20 @@ namespace WcfCompressMessageEncoder.Test
     public class WcfCompressMessageEncoderTest
     {
         [Test]
+        public void DetectMismatchBindingClientServer()
+        {
+            StartService(typeof(Service));
+
+            var binding =
+                new CustomBinding(
+                    new WcfCompressMessageEncodingBindingElement(new TextMessageEncodingBindingElement(), "GZip"),
+                    new HttpTransportBindingElement());
+            var address = $"http://{Environment.MachineName}:8002/WcfCompressMessageEncoder.Service/DeflateText";
+            Assert.Throws<ProtocolException>(() => CallWcf(address, binding));
+        }
+
+
+        [Test]
         public void PerformanceTestAllBindings()
         {
             StartService(typeof(Service));
@@ -40,7 +54,7 @@ namespace WcfCompressMessageEncoder.Test
             {
                 foreach (var kvp in addressBinding)
                 {
-                    CallWcf(kvp.Value, kvp.Key, callElapsed);
+                    CallWcf(kvp.Key, kvp.Value, callElapsed);
                 }
             }
 
@@ -59,7 +73,7 @@ namespace WcfCompressMessageEncoder.Test
         }
 
 
-        private void CallWcf(Binding binding, string address, Dictionary<string, Tuple<TimeSpan, int>> callElapsed)
+        private void CallWcf(string address, Binding binding, Dictionary<string, Tuple<TimeSpan, int>> callElapsed = null)
         {
             var channelWs = ChannelFactory<IService>.CreateChannel(binding, new EndpointAddress(address));
             try
@@ -76,14 +90,18 @@ namespace WcfCompressMessageEncoder.Test
                 var addressPostfix = address.Remove(0, address.LastIndexOf("/"));
                 Console.WriteLine($"Call {addressPostfix} elapsed {sw.Elapsed}");
 
-                Tuple<TimeSpan, int> elapsedItem;
-                if (callElapsed.TryGetValue(addressPostfix, out elapsedItem))
+                if (callElapsed != null)
                 {
-                    callElapsed[addressPostfix] = new Tuple<TimeSpan, int>(elapsedItem.Item1 + sw.Elapsed, elapsedItem.Item2 + 1);
-                }
-                else
-                {
-                    callElapsed.Add(addressPostfix, new Tuple<TimeSpan, int>(sw.Elapsed, 1));
+                    Tuple<TimeSpan, int> elapsedItem;
+                    if (callElapsed.TryGetValue(addressPostfix, out elapsedItem))
+                    {
+                        callElapsed[addressPostfix] =
+                            new Tuple<TimeSpan, int>(elapsedItem.Item1 + sw.Elapsed, elapsedItem.Item2 + 1);
+                    }
+                    else
+                    {
+                        callElapsed.Add(addressPostfix, new Tuple<TimeSpan, int>(sw.Elapsed, 1));
+                    }
                 }
             }
             finally

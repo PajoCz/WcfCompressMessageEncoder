@@ -47,9 +47,9 @@ namespace WcfCompressMessageEncoder
                 this.compressionFormat = compressionFormat;
             }
 
-            public override string ContentType => WcfCompressContentType;
+            public override string ContentType => string.IsNullOrEmpty(compressionFormat) ? WcfCompressContentType : WcfCompressContentType + "-" + compressionFormat.ToLower();
 
-            public override string MediaType => WcfCompressContentType;
+            public override string MediaType => ContentType;
 
             //SOAP version to use - we delegate to the inner encoder for this
             public override MessageVersion MessageVersion => innerEncoder.MessageVersion;
