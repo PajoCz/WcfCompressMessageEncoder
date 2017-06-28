@@ -15,61 +15,118 @@ namespace WcfCompressMessageEncoder.Test
         [Test]
         public void DetectMismatchBindingClientServer()
         {
-            StartService(typeof(Service));
-
-            var binding =
-                new CustomBinding(
-                    new WcfCompressMessageEncodingBindingElement(new TextMessageEncodingBindingElement(), "GZip"),
-                    new HttpTransportBindingElement());
-            var address = $"http://{Environment.MachineName}:8002/WcfCompressMessageEncoder.Service/DeflateText";
-            Assert.Throws<ProtocolException>(() => CallWcf(address, binding));
+            var service = StartService(typeof(Service));
+            try
+            {
+                var binding =
+                    new CustomBinding(
+                        new WcfCompressMessageEncodingBindingElement(new TextMessageEncodingBindingElement(), "GZip"),
+                        new HttpTransportBindingElement());
+                var address = $"http://{Environment.MachineName}:8002/WcfCompressMessageEncoder.Service/DeflateText";
+                Assert.Throws<ProtocolException>(() => CallWcf(address, binding));
+            }
+            finally
+            {
+                service.Close();
+            }
         }
 
 
         [Test]
         public void PerformanceTestAllBindings()
         {
-            StartService(typeof(Service));
-
-            Console.WriteLine("Start Fiddler and watch transfered data (size of Http request/response)");
-
-            //not localhost but real hostName of running pc - must be for capturing by Fiddler
-            var hostName = System.Environment.MachineName;
-
-            Dictionary<string, Binding> addressBinding = new Dictionary<string, Binding>()
+            var service = StartService(typeof(Service));
+            try
             {
-                {$"http://{hostName}:8002/WcfCompressMessageEncoder.Service/", new WSHttpBinding(SecurityMode.None)},
-                {$"http://{hostName}:8002/WcfCompressMessageEncoder.Service/Text", new CustomBinding(new WcfCompressMessageEncodingBindingElement(new TextMessageEncodingBindingElement(), String.Empty), new HttpTransportBindingElement())},
-                {$"http://{hostName}:8002/WcfCompressMessageEncoder.Service/Binary", new CustomBinding(new WcfCompressMessageEncodingBindingElement(new BinaryMessageEncodingBindingElement(), String.Empty), new HttpTransportBindingElement())},
-                {$"http://{hostName}:8002/WcfCompressMessageEncoder.Service/GZipText", new CustomBinding(new WcfCompressMessageEncodingBindingElement(new TextMessageEncodingBindingElement(), "GZip"), new HttpTransportBindingElement())},
-                {$"http://{hostName}:8002/WcfCompressMessageEncoder.Service/GZipBinary", new CustomBinding(new WcfCompressMessageEncodingBindingElement(new BinaryMessageEncodingBindingElement(), "GZip"), new HttpTransportBindingElement())},
-                {$"http://{hostName}:8002/WcfCompressMessageEncoder.Service/DeflateText", new CustomBinding(new WcfCompressMessageEncodingBindingElement(new TextMessageEncodingBindingElement(), "Deflate"), new HttpTransportBindingElement())},
-                {$"http://{hostName}:8002/WcfCompressMessageEncoder.Service/DeflateBinary", new CustomBinding(new WcfCompressMessageEncodingBindingElement(new BinaryMessageEncodingBindingElement(), "Deflate"), new HttpTransportBindingElement())},
-                {$"http://{hostName}:8002/WcfCompressMessageEncoder.Service/BrotliText", new CustomBinding(new WcfCompressMessageEncodingBindingElement(new TextMessageEncodingBindingElement(), "Brotli"), new HttpTransportBindingElement())},
-                {$"http://{hostName}:8002/WcfCompressMessageEncoder.Service/BrotliBinary", new CustomBinding(new WcfCompressMessageEncodingBindingElement(new BinaryMessageEncodingBindingElement(), "Brotli"), new HttpTransportBindingElement())},
-            };
+                Console.WriteLine("Start Fiddler and watch transfered data (size of Http request/response)");
 
-            Dictionary<string, Tuple<TimeSpan, int>> callElapsed = new Dictionary<string, Tuple<TimeSpan, int>>();
-            for (int i = 0; i < 10; i++)
-            {
-                foreach (var kvp in addressBinding)
+                //not localhost but real hostName of running pc - must be for capturing by Fiddler
+                var hostName = System.Environment.MachineName;
+
+                Dictionary<string, Binding> addressBinding = new Dictionary<string, Binding>()
                 {
-                    CallWcf(kvp.Key, kvp.Value, callElapsed);
+                    {
+                        $"http://{hostName}:8002/WcfCompressMessageEncoder.Service/",
+                        new WSHttpBinding(SecurityMode.None)
+                    },
+                    {
+                        $"http://{hostName}:8002/WcfCompressMessageEncoder.Service/Text",
+                        new CustomBinding(
+                            new WcfCompressMessageEncodingBindingElement(new TextMessageEncodingBindingElement(),
+                                String.Empty), new HttpTransportBindingElement())
+                    },
+                    {
+                        $"http://{hostName}:8002/WcfCompressMessageEncoder.Service/Binary",
+                        new CustomBinding(
+                            new WcfCompressMessageEncodingBindingElement(new BinaryMessageEncodingBindingElement(),
+                                String.Empty), new HttpTransportBindingElement())
+                    },
+                    {
+                        $"http://{hostName}:8002/WcfCompressMessageEncoder.Service/GZipText",
+                        new CustomBinding(
+                            new WcfCompressMessageEncodingBindingElement(new TextMessageEncodingBindingElement(),
+                                "GZip"), new HttpTransportBindingElement())
+                    },
+                    {
+                        $"http://{hostName}:8002/WcfCompressMessageEncoder.Service/GZipBinary",
+                        new CustomBinding(
+                            new WcfCompressMessageEncodingBindingElement(new BinaryMessageEncodingBindingElement(),
+                                "GZip"), new HttpTransportBindingElement())
+                    },
+                    {
+                        $"http://{hostName}:8002/WcfCompressMessageEncoder.Service/DeflateText",
+                        new CustomBinding(
+                            new WcfCompressMessageEncodingBindingElement(new TextMessageEncodingBindingElement(),
+                                "Deflate"), new HttpTransportBindingElement())
+                    },
+                    {
+                        $"http://{hostName}:8002/WcfCompressMessageEncoder.Service/DeflateBinary",
+                        new CustomBinding(
+                            new WcfCompressMessageEncodingBindingElement(new BinaryMessageEncodingBindingElement(),
+                                "Deflate"), new HttpTransportBindingElement())
+                    },
+                    {
+                        $"http://{hostName}:8002/WcfCompressMessageEncoder.Service/BrotliText",
+                        new CustomBinding(
+                            new WcfCompressMessageEncodingBindingElement(new TextMessageEncodingBindingElement(),
+                                "Brotli"), new HttpTransportBindingElement())
+                    },
+                    {
+                        $"http://{hostName}:8002/WcfCompressMessageEncoder.Service/BrotliBinary",
+                        new CustomBinding(
+                            new WcfCompressMessageEncodingBindingElement(new BinaryMessageEncodingBindingElement(),
+                                "Brotli"), new HttpTransportBindingElement())
+                    },
+                };
+
+                Dictionary<string, Tuple<TimeSpan, int>> callElapsed = new Dictionary<string, Tuple<TimeSpan, int>>();
+                for (int i = 0; i < 10; i++)
+                {
+                    foreach (var kvp in addressBinding)
+                    {
+                        CallWcf(kvp.Key, kvp.Value, callElapsed);
+                    }
+                }
+
+                Console.WriteLine(Environment.NewLine + "Performance summary:");
+                foreach (var kvp in callElapsed)
+                {
+                    Console.WriteLine(
+                        $"{kvp.Key} called {kvp.Value.Item2}x with time {kvp.Value.Item1}. Average call was {kvp.Value.Item1.TotalMilliseconds / kvp.Value.Item2} ms");
                 }
             }
-
-            Console.WriteLine(Environment.NewLine + "Performance summary:");
-            foreach (var kvp in callElapsed)
+            finally
             {
-                Console.WriteLine($"{kvp.Key} called {kvp.Value.Item2}x with time {kvp.Value.Item1}. Average call was {kvp.Value.Item1.TotalMilliseconds/ kvp.Value.Item2} ms");
+                service.Close();
             }
         }
 
-        private void StartService(Type serviceType)
+        private ServiceHost StartService(Type serviceType)
         {
             var service = new ServiceHost(serviceType);
             service.Open();
             Console.WriteLine($"Service opened at baseAddress {service.BaseAddresses.First()}");
+            return service;
         }
 
 
