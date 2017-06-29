@@ -13,7 +13,7 @@ namespace WcfCompressMessageEncoder
 
         //The WcfCompress encoder wraps an inner encoder
         //We require a factory to be passed in that will create this inner encoder
-        public WcfCompressMessageEncoderFactory(MessageEncoderFactory messageEncoderFactory, string compressionFormat)
+        public WcfCompressMessageEncoderFactory(MessageEncoderFactory messageEncoderFactory, CompressionFormat compressionFormat)
         {
             if (messageEncoderFactory == null)
                 throw new ArgumentNullException("messageEncoderFactory", "A valid message encoder factory must be passed to the WcfCompressEncoder");
@@ -36,10 +36,10 @@ namespace WcfCompressMessageEncoder
             //This member stores this inner encoder.
             private readonly MessageEncoder innerEncoder;
 
-            private readonly string compressionFormat;
+            private readonly CompressionFormat compressionFormat;
 
             //We require an inner encoder to be supplied (see comment above)
-            internal WcfCompressMessageEncoder(MessageEncoder messageEncoder, string compressionFormat)
+            internal WcfCompressMessageEncoder(MessageEncoder messageEncoder, CompressionFormat compressionFormat)
             {
                 if (messageEncoder == null)
                     throw new ArgumentNullException("messageEncoder", "A valid message encoder must be passed to the WcfCompressEncoder");
@@ -47,25 +47,25 @@ namespace WcfCompressMessageEncoder
                 this.compressionFormat = compressionFormat;
             }
 
-            public override string ContentType => string.IsNullOrEmpty(compressionFormat) ? WcfCompressContentType : WcfCompressContentType + "-" + compressionFormat.ToLower();
+            public override string ContentType => compressionFormat == CompressionFormat.None  ? WcfCompressContentType : WcfCompressContentType + "-" + compressionFormat.ToString().ToLower();
 
             public override string MediaType => ContentType;
 
             //SOAP version to use - we delegate to the inner encoder for this
             public override MessageVersion MessageVersion => innerEncoder.MessageVersion;
 
-            private Stream GetCompressStream(Stream inputStream, CompressionMode compressionMode)
+            private Stream GetCompressStream(Stream inputStream, CompressionMode compressionMode, bool leaveOpen)
             {
-                switch (compressionFormat.ToLower())
+                switch (compressionFormat)
                 {
-                    case "":
+                    case CompressionFormat.None:
                         return null;
-                    case "gzip":
-                        return new GZipStream(inputStream, compressionMode, true);
-                    case "deflate":
-                        return new DeflateStream(inputStream, compressionMode, true);
-                    case "brotli":
-                        return new BrotliStream(inputStream, compressionMode, true);
+                    case CompressionFormat.GZip:
+                        return new GZipStream(inputStream, compressionMode, leaveOpen);
+                    case CompressionFormat.Deflate:
+                        return new DeflateStream(inputStream, compressionMode, leaveOpen);
+                    case CompressionFormat.Brotli:
+                        return new BrotliStream(inputStream, compressionMode, leaveOpen);
                     default:
                         throw new ArgumentOutOfRangeException(nameof(compressionFormat), $"Unknown compressionFormat value '{compressionFormat}'");
                 }
@@ -75,7 +75,7 @@ namespace WcfCompressMessageEncoder
             private ArraySegment<byte> CompressBuffer(ArraySegment<byte> buffer, BufferManager bufferManager, int messageOffset)
             {
                 var memoryStream = new MemoryStream();
-                var compressStream = GetCompressStream(memoryStream, CompressionMode.Compress);
+                var compressStream = GetCompressStream(memoryStream, CompressionMode.Compress, true);
                 if (compressStream == null) return buffer;
 
                 using (var gzStream = compressStream)
@@ -102,7 +102,7 @@ namespace WcfCompressMessageEncoder
             {
                 var memoryStream = new MemoryStream(buffer.Array, buffer.Offset, buffer.Count);
                 var decompressedStream = new MemoryStream();
-                var decompressStream = GetCompressStream(memoryStream, CompressionMode.Decompress);
+                var decompressStream = GetCompressStream(memoryStream, CompressionMode.Decompress, true);
                 if (decompressStream == null) return buffer;
 
                 var totalRead = 0;
@@ -157,13 +157,13 @@ namespace WcfCompressMessageEncoder
                 //Pass false for the "leaveOpen" parameter to the GZipStream constructor.
                 //This will ensure that the inner stream gets closed when the message gets closed, which
                 //will ensure that resources are available for reuse/release.
-                var gzStream = new GZipStream(stream, CompressionMode.Decompress, false);
+                var gzStream = GetCompressStream(stream, CompressionMode.Decompress, false);
                 return innerEncoder.ReadMessage(gzStream, maxSizeOfHeaders);
             }
 
             public override void WriteMessage(Message message, Stream stream)
             {
-                using (var gzStream = new GZipStream(stream, CompressionMode.Compress, true))
+                using (var gzStream = GetCompressStream(stream, CompressionMode.Compress, true))
                 {
                     innerEncoder.WriteMessage(message, gzStream);
                 }

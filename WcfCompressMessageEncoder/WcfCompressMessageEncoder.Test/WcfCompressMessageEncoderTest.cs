@@ -20,7 +20,7 @@ namespace WcfCompressMessageEncoder.Test
             {
                 var binding =
                     new CustomBinding(
-                        new WcfCompressMessageEncodingBindingElement(new TextMessageEncodingBindingElement(), "GZip"),
+                        new WcfCompressMessageEncodingBindingElement(new TextMessageEncodingBindingElement(), CompressionFormat.GZip),
                         new HttpTransportBindingElement());
                 var address = $"http://{Environment.MachineName}:8002/WcfCompressMessageEncoder.Service/DeflateText";
                 Assert.Throws<ProtocolException>(() => CallWcf(address, binding));
@@ -53,49 +53,49 @@ namespace WcfCompressMessageEncoder.Test
                         $"http://{hostName}:8002/WcfCompressMessageEncoder.Service/Text",
                         new CustomBinding(
                             new WcfCompressMessageEncodingBindingElement(new TextMessageEncodingBindingElement(),
-                                String.Empty), new HttpTransportBindingElement())
+                                CompressionFormat.None), new HttpTransportBindingElement())
                     },
                     {
                         $"http://{hostName}:8002/WcfCompressMessageEncoder.Service/Binary",
                         new CustomBinding(
                             new WcfCompressMessageEncodingBindingElement(new BinaryMessageEncodingBindingElement(),
-                                String.Empty), new HttpTransportBindingElement())
+                                CompressionFormat.None), new HttpTransportBindingElement())
                     },
                     {
                         $"http://{hostName}:8002/WcfCompressMessageEncoder.Service/GZipText",
                         new CustomBinding(
                             new WcfCompressMessageEncodingBindingElement(new TextMessageEncodingBindingElement(),
-                                "GZip"), new HttpTransportBindingElement())
+                                CompressionFormat.GZip), new HttpTransportBindingElement())
                     },
                     {
                         $"http://{hostName}:8002/WcfCompressMessageEncoder.Service/GZipBinary",
                         new CustomBinding(
                             new WcfCompressMessageEncodingBindingElement(new BinaryMessageEncodingBindingElement(),
-                                "GZip"), new HttpTransportBindingElement())
+                                CompressionFormat.GZip), new HttpTransportBindingElement())
                     },
                     {
                         $"http://{hostName}:8002/WcfCompressMessageEncoder.Service/DeflateText",
                         new CustomBinding(
                             new WcfCompressMessageEncodingBindingElement(new TextMessageEncodingBindingElement(),
-                                "Deflate"), new HttpTransportBindingElement())
+                                CompressionFormat.Deflate), new HttpTransportBindingElement())
                     },
                     {
                         $"http://{hostName}:8002/WcfCompressMessageEncoder.Service/DeflateBinary",
                         new CustomBinding(
                             new WcfCompressMessageEncodingBindingElement(new BinaryMessageEncodingBindingElement(),
-                                "Deflate"), new HttpTransportBindingElement())
+                                CompressionFormat.Deflate), new HttpTransportBindingElement())
                     },
                     {
                         $"http://{hostName}:8002/WcfCompressMessageEncoder.Service/BrotliText",
                         new CustomBinding(
                             new WcfCompressMessageEncodingBindingElement(new TextMessageEncodingBindingElement(),
-                                "Brotli"), new HttpTransportBindingElement())
+                                CompressionFormat.Brotli), new HttpTransportBindingElement())
                     },
                     {
                         $"http://{hostName}:8002/WcfCompressMessageEncoder.Service/BrotliBinary",
                         new CustomBinding(
                             new WcfCompressMessageEncodingBindingElement(new BinaryMessageEncodingBindingElement(),
-                                "Brotli"), new HttpTransportBindingElement())
+                                CompressionFormat.Brotli), new HttpTransportBindingElement())
                     },
                 };
 

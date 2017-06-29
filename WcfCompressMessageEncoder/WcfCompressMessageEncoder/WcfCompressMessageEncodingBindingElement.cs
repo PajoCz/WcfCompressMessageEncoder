@@ -7,13 +7,20 @@ using System.Xml;
 
 namespace WcfCompressMessageEncoder
 {
+    public enum CompressionFormat
+    {
+        None,
+        GZip,
+        Deflate,
+        Brotli
+    }
+    
     // This is constants for WcfCompress message encoding policy.
     internal static class WcfCompressMessageEncodingPolicyConstants
     {
         public const string WcfCompressEncodingName = "WcfCompressEncoding";
         public const string WcfCompressEncodingNamespace = "http://schemas.microsoft.com/ws/06/2004/mspolicy/netWcfCompress1";
         public const string WcfCompressEncodingPrefix = "WcfCompress";
-        public const string DefaultCompressionFormat = "GZip";
     }
 
     //This is the binding element that, when plugged into a custom binding, will enable the WcfCompress encoder
@@ -25,11 +32,11 @@ namespace WcfCompressMessageEncoder
 
         //By default, use the default text encoder as the inner encoder
         public WcfCompressMessageEncodingBindingElement()
-            : this(new TextMessageEncodingBindingElement())
+            : this(new TextMessageEncodingBindingElement(), CompressionFormat.None)
         {
         }
 
-        public WcfCompressMessageEncodingBindingElement(MessageEncodingBindingElement messageEncoderBindingElement, string compressionFormat = WcfCompressMessageEncodingPolicyConstants.DefaultCompressionFormat)
+        public WcfCompressMessageEncodingBindingElement(MessageEncodingBindingElement messageEncoderBindingElement, CompressionFormat compressionFormat)
         {
             InnerMessageEncodingBindingElement = messageEncoderBindingElement;
             CompressionFormat = compressionFormat;
@@ -100,7 +107,7 @@ namespace WcfCompressMessageEncoder
             return context.CanBuildInnerChannelListener<TChannel>();
         }
 
-        public string CompressionFormat { get; set; }
+        public CompressionFormat CompressionFormat { get; set; }
     }
 
     //This class is necessary to be able to plug in the WcfCompress encoder binding element through
@@ -121,7 +128,7 @@ namespace WcfCompressMessageEncoder
 
         //The only property we need to configure for our binding element is the type of
         //inner encoder to use. Here, we support text and binary.
-        [ConfigurationProperty("compressionFormat", DefaultValue = WcfCompressMessageEncodingPolicyConstants.DefaultCompressionFormat)]
+        [ConfigurationProperty("compressionFormat")]
         public string CompressionFormat
         {
             get => (string) base["compressionFormat"];
@@ -132,7 +139,7 @@ namespace WcfCompressMessageEncoder
         public override void ApplyConfiguration(BindingElement bindingElement)
         {
             var binding = (WcfCompressMessageEncodingBindingElement) bindingElement;
-            binding.CompressionFormat = CompressionFormat;
+            ApplyConfigurationSetBindingCompressionFormat(binding);
             var propertyInfo = ElementInformation.Properties;
             if (propertyInfo["innerMessageEncoding"].ValueOrigin != PropertyValueOrigin.Default)
                 switch (InnerMessageEncoding)
@@ -144,6 +151,23 @@ namespace WcfCompressMessageEncoder
                         binding.InnerMessageEncodingBindingElement = new BinaryMessageEncodingBindingElement();
                         break;
                 }
+        }
+
+        private void ApplyConfigurationSetBindingCompressionFormat(WcfCompressMessageEncodingBindingElement binding)
+        {
+            if (string.IsNullOrEmpty(CompressionFormat))
+            {
+                binding.CompressionFormat = WcfCompressMessageEncoder.CompressionFormat.None;
+            }
+            else
+            {
+                CompressionFormat enumValue;
+                if (!Enum.TryParse(CompressionFormat, true, out enumValue))
+                {
+                    throw new ArgumentOutOfRangeException($"Configuration CompressionFormat unsupported value '{CompressionFormat}'");
+                }
+                binding.CompressionFormat = enumValue;
+            }
         }
 
         //Called by the WCF to create the binding element
