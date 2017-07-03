@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.ServiceModel.Channels;
@@ -28,6 +29,8 @@ namespace WcfCompressMessageEncoder
         //This is the actual WcfCompress encoder
         private class WcfCompressMessageEncoder : MessageEncoder
         {
+            private static readonly TraceSource TraceSource = new TraceSource(typeof(WcfCompressMessageEncoder).Name);
+
             private static readonly string WcfCompressContentType = "application/x-WcfCompress";
 
             //This implementation wraps an inner encoder that actually converts a WCF Message
@@ -135,21 +138,36 @@ namespace WcfCompressMessageEncoder
             //One of the two main entry points into the encoder. Called by WCF to decode a buffered byte array into a Message.
             public override Message ReadMessage(ArraySegment<byte> buffer, BufferManager bufferManager, string contentType)
             {
+                Stopwatch sw = Stopwatch.StartNew();
                 //Decompress the buffer
                 ArraySegment<byte> decompressedBuffer = DecompressBuffer(buffer, bufferManager);
                 //Use the inner encoder to decode the decompressed buffer
+                sw.Stop();
+                var decompressTime = sw.Elapsed;
+                sw.Restart();
                 var returnMessage = innerEncoder.ReadMessage(decompressedBuffer, bufferManager);
                 returnMessage.Properties.Encoder = this;
+                sw.Stop();
+                var innerReadTime = sw.Elapsed;
+                TraceSource.TraceInformation($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.ffffff} Decompress ({compressionFormat}) {buffer.Count}B {decompressTime}. InnerEncoder read {decompressedBuffer.Count}B {innerReadTime}");
                 return returnMessage;
             }
 
             //One of the two main entry points into the encoder. Called by WCF to encode a Message into a buffered byte array.
             public override ArraySegment<byte> WriteMessage(Message message, int maxMessageSize, BufferManager bufferManager, int messageOffset)
             {
+                Stopwatch sw = Stopwatch.StartNew();
                 //Use the inner encoder to encode a Message into a buffered byte array
                 ArraySegment<byte> buffer = innerEncoder.WriteMessage(message, maxMessageSize, bufferManager, 0);
+                sw.Stop();
+                var innerWriteTime = sw.Elapsed;
+                sw.Restart();
                 //Compress the resulting byte array
-                return CompressBuffer(buffer, bufferManager, messageOffset);
+                var result = CompressBuffer(buffer, bufferManager, messageOffset);
+                sw.Stop();
+                var compressWriteTime = sw.Elapsed;
+                TraceSource.TraceInformation($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.ffffff} InnerEncoder write {buffer.Count}B {innerWriteTime}. Compress ({compressionFormat}) write {result.Count}B {compressWriteTime}");
+                return result;
             }
 
             public override Message ReadMessage(Stream stream, int maxSizeOfHeaders, string contentType)
