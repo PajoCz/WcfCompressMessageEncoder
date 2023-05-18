@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>WcfCompressMessageEncoder</id>
+    <version>1.0.0</version>
+    <authors>pbalas</authors>
+    <owners>pbalas</owners>
+    <licenseUrl>https://github.com/PajoCz/RuleEvaluator/licence.txt</licenseUrl>
+    <projectUrl>https://github.com/PajoCz/WcfCompressMessageEncoder</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>WcfCompressMessageEncoder</description>
+    <copyright>Copyright 2017-2023 pbalas</copyright>
+    <tags>WCF Compress MessageEncoder</tags>
+    <dependencies>
+      <group targetFramework="net40">
+        <dependency id="Brotli.NET" version="1.0.17" />
+      </group>
+    </dependencies>
+  </metadata>
+
+  <files>
+    <file src="WcfCompressMessageEncoder\WcfCompressMessageEncoder\bin\Debug\WcfCompressMessageEncoder.dll" target="lib\net40"/>
+    <file src="WcfCompressMessageEncoder\WcfCompressMessageEncoder\bin\Debug\WcfCompressMessageEncoder.pdb" target="lib\net40"/>
+  </files>
+</package>
