@@ -132,7 +132,7 @@ namespace WcfCompressMessageEncoder.Test
 
         private void CallWcf(string address, Binding binding, Dictionary<string, Tuple<TimeSpan, int>> callElapsed = null)
         {
-            var channelWs = ChannelFactory<IService>.CreateChannel(binding, new EndpointAddress(address));
+            var channelWs = new ChannelFactory<IService>(binding, new EndpointAddress(address)).CreateChannel();
             try
             {
                 var sb = new StringBuilder();
