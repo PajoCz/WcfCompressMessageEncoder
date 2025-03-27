@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>WcfCompressMessageEncoder</id>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <authors>pbalas</authors>
     <owners>pbalas</owners>
     <licenseUrl>https://github.com/PajoCz/RuleEvaluator/licence.txt</licenseUrl>
@@ -12,12 +12,17 @@
     <copyright>Copyright 2017-2023 pbalas</copyright>
     <tags>WCF Compress MessageEncoder</tags>
     <dependencies>
-      <group targetFramework="net472">
+      <group targetFramework=".NETFramework4.7.2">
         <dependency id="Brotli.NET" version="1.0.17" />
       </group>
       <group targetFramework="net8.0">
+        <dependency id="System.ServiceModel.Primitives" version="8.1.2" exclude="Build,Analyzers" />
       </group>
     </dependencies>
+	<frameworkAssemblies>
+		<frameworkAssembly assemblyName="System.Configuration" targetFramework=".NETFramework4.7.2" />
+		<frameworkAssembly assemblyName="System.ServiceModel" targetFramework=".NETFramework4.7.2" />
+	</frameworkAssemblies>
   </metadata>
 
   <files>
