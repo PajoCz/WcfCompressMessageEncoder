@@ -3,7 +3,10 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.ServiceModel.Channels;
+
+#if NETFRAMEWORK
 using Brotli;
+#endif
 
 namespace WcfCompressMessageEncoder
 {
